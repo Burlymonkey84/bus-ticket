@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Bus Ticketing — Register</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body{font-family:system-ui,Arial;display:flex;align-items:center;justify-content:center;height:100vh;background:#f5f7fb}
+        .card{background:white;padding:24px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08);width:360px}
+        input,select{width:100%;padding:8px;margin:8px 0;border:1px solid #ddd;border-radius:6px}
+        button{width:100%;padding:10px;border:none;border-radius:6px;background:#059669;color:white;font-weight:600}
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2 style="margin:0 0 10px 0">Register</h2>
+    <input id="username" placeholder="Username" />
+    <input id="password" placeholder="Password" type="password" />
+    <select id="role">
+        <option value="ROLE_USER">User</option>
+        <option value="ROLE_ADMIN">Admin</option>
+    </select>
+    <button id="regBtn">Create account</button>
+    <p style="font-size:13px;margin-top:10px">Already have an account? <a href="index.html">Sign in</a></p>
+    <p id="msg" style="color:#b91c1c"></p>
+</div>
+
+<script>
+    const api = '';
+    document.getElementById('regBtn').addEventListener('click', async () => {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+      document.getElementById('msg').textContent = '';
+      if(!username||!password){ document.getElementById('msg').textContent='Enter username and password'; return; }
+      try{
+        const res = await fetch(api + '/api/auth/register', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
+        if(!res.ok){ const text = await res.text(); throw new Error(text || res.status); }
+        alert('Registered. You can login now.');
+        location.href = 'index.html';
+      }catch(e){
+        document.getElementById('msg').textContent = 'Registration failed: ' + e.message;
+      }
+    });
+</script>
+</body>
+</html>

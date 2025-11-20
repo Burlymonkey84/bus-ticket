@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Bus Ticketing — Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body{font-family:Arial,system-ui;margin:0;background:#f3f4f6}
+        header{background:white;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+        main{padding:18px}
+        .card{background:white;padding:12px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.04);margin-bottom:12px}
+        table{width:100%;border-collapse:collapse}
+        td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
+        a.button{padding:8px 12px;background:#2563eb;color:white;border-radius:6px;text-decoration:none}
+    </style>
+</head>
+<body>
+<header>
+    <div><strong>Bus Ticketing</strong></div>
+    <div>
+        <a href="book.html" class="button">Book Ticket</a>
+        <a href="tickets.html" style="margin-left:8px" class="button">My Tickets</a>
+        <button id="logoutBtn" style="margin-left:12px">Logout</button>
+    </div>
+</header>
+
+<main>
+    <div class="card">
+        <h3 style="margin-top:0">Available Routes</h3>
+        <div id="routesContainer">Loading routes...</div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0">Available Buses</h3>
+        <div id="busesContainer">Loading buses...</div>
+    </div>
+</main>
+
+<script>
+    const jwt = localStorage.getItem('jwt');
+    if(!jwt){ location.href = 'index.html'; }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('jwt');
+      location.href = 'index.html';
+    });
+
+    const api = '';
+    async function getJSON(path){
+      const res = await fetch(api + path, { headers: { Authorization: 'Bearer ' + jwt }});
+      if(res.ok) return res.json();
+      // if unauthorized, send back to login
+      if(res.status === 401 || res.status === 403){ localStorage.removeItem('jwt'); location.href='index.html'; }
+      throw new Error('Fetch error: ' + res.status);
+    }
+
+    async function load(){
+      try{
+        const routes = await getJSON('/api/routes');
+        const buses = await getJSON('/api/buses');
+
+        const rc = document.getElementById('routesContainer');
+        if(routes.length===0) rc.innerHTML = '<em>No routes</em>';
+        else {
+          let html = '<table><thead><tr><th>From</th><th>To</th><th>Fare</th><th>Distance (km)</th></tr></thead><tbody>';
+          routes.forEach(r=> html += `<tr><td>${r.origin}</td><td>${r.destination}</td><td>${r.fare}</td><td>${r.distanceKm||r.distance_km||''}</td></tr>`);
+          html += '</tbody></table>';
+          rc.innerHTML = html;
+        }
+
+        const bc = document.getElementById('busesContainer');
+        if(buses.length===0) bc.innerHTML = '<em>No buses</em>';
+        else {
+          let html = '<table><thead><tr><th>Bus Number</th><th>Capacity</th><th>Operator</th></tr></thead><tbody>';
+          buses.forEach(b=> html += `<tr><td>${b.busNumber||b.bus_number}</td><td>${b.capacity}</td><td>${b.operatorName||b.operator_name||''}</td></tr>`);
+          html += '</tbody></table>';
+          bc.innerHTML = html;
+        }
+      }catch(e){
+        console.error(e);
+        document.getElementById('routesContainer').textContent = 'Failed to load data';
+        document.getElementById('busesContainer').textContent = 'Failed to load data';
+      }
+    }
+
+    load();
+</script>
+</body>
+</html>

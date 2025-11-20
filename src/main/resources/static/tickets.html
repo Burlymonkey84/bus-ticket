@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>My Tickets</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body{font-family:Arial,system-ui;padding:18px;background:#f8fafc}
+        .card{background:white;padding:18px;border-radius:8px;max-width:900px;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2 style="margin-top:0">My Tickets</h2>
+    <div id="list">Loading...</div>
+</div>
+
+<script>
+    const jwt = localStorage.getItem('jwt');
+    if(!jwt){ location.href='index.html'; }
+    const api = '';
+
+    async function load(){
+      // Option A: if backend supports "my tickets" endpoint:
+      //const res = await fetch(api + '/api/tickets/mine', { headers: { Authorization: 'Bearer ' + jwt }});
+      // Fallback: fetch all tickets and show them (for demo)
+
+      const res = await fetch(api + '/api/tickets', { headers: { Authorization: 'Bearer ' + jwt }});
+      if(!res.ok){ if([401,403].includes(res.status)){ localStorage.removeItem('jwt'); location.href='index.html'; } document.getElementById('list').textContent = 'Failed to load'; return; }
+      const tickets = await res.json();
+      if(tickets.length===0){ document.getElementById('list').textContent = 'No tickets yet'; return; }
+      let html = '<table><thead><tr><th>Passenger</th><th>Email</th><th>Seat</th><th>Route</th><th>Booked</th></tr></thead><tbody>';
+      tickets.forEach(t => {
+        const route = t.route ? (t.route.origin + ' → ' + t.route.destination) : (t.routeId || t.route_id || '—');
+        html += `<tr><td>${t.passengerName||t.passenger_name}</td><td>${t.passengerEmail||t.passenger_email||''}</td><td>${t.seatNumber||t.seat_number||''}</td><td>${route}</td><td>${t.bookingTime||t.booking_time||''}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('list').innerHTML = html;
+    }
+
+    load();
+</script>
+</body>
+</html>

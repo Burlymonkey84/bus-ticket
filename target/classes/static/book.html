@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Book Ticket</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body{font-family:Arial,system-ui;padding:18px;background:#f8fafc}
+        .card{background:white;padding:18px;border-radius:8px;max-width:520px;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+        input,select{width:100%;padding:8px;margin:8px 0;border-radius:6px;border:1px solid #ddd}
+        button{background:#059669;color:white;padding:10px;border-radius:6px;border:none;width:100%}
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2 style="margin-top:0">Book a Ticket</h2>
+    <input id="passengerName" placeholder="Passenger name" />
+    <input id="passengerEmail" placeholder="Passenger email" />
+    <select id="routeSelect"><option>Loading routes...</option></select>
+    <input id="seatNumber" placeholder="Seat number (e.g., 12A)" />
+    <button id="bookBtn">Book</button>
+    <p id="msg" style="color:#b91c1c"></p>
+</div>
+
+<script>
+    const jwt = localStorage.getItem('jwt');
+    if(!jwt){ location.href='index.html'; }
+    const api = '';
+
+    async function loadRoutes(){
+      const res = await fetch(api + '/api/routes', { headers:{ Authorization: 'Bearer ' + jwt }});
+      if(!res.ok){ if(res.status===401||res.status===403){ localStorage.removeItem('jwt'); location.href='index.html'; } return; }
+      const routes = await res.json();
+      const sel = document.getElementById('routeSelect');
+      sel.innerHTML = '';
+      routes.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `${r.origin} → ${r.destination} (₹${r.fare})`;
+        sel.appendChild(opt);
+      });
+    }
+
+    document.getElementById('bookBtn').addEventListener('click', async () => {
+      const name = document.getElementById('passengerName').value.trim();
+      const email = document.getElementById('passengerEmail').value.trim();
+      const routeId = document.getElementById('routeSelect').value;
+      const seat = document.getElementById('seatNumber').value.trim();
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
+
+      if(!name||!routeId){ msg.textContent = 'Fill passenger name and select route'; return; }
+
+      try{
+        const res = await fetch(api + '/api/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + jwt },
+          body: JSON.stringify({ passengerName:name, passengerEmail:email, seatNumber:seat, routeId: routeId })
+        });
+        if(!res.ok){
+          const text = await res.text();
+          throw new Error(text || res.status);
+        }
+        alert('Ticket booked!');
+        location.href = 'tickets.html';
+      }catch(e){
+        msg.textContent = 'Booking failed: ' + e.message;
+      }
+    });
+
+    loadRoutes();
+</script>
+</body>
+</html>
