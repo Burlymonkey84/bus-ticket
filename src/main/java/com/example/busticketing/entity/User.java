@@ -1,27 +1,13 @@
 
-package com.example.busticketing.entity;
+package com.example.busticketing.dto;
 
-import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Table(name = "app_users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable=false, unique=true)
+public class AuthRequest {
     private String username;
-
-    @Column(nullable=false)
     private String password;
-
-    private String role; // e.g. ROLE_ADMIN
 }
